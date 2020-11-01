@@ -1,5 +1,5 @@
 {
-  "name": "@parisvime/core",
+  "name": "@vime/core",
   "version": "4.2.1",
   "description": "Customizable, extensible, accessible and framework agnostic media player.",
   "license": "MIT",
