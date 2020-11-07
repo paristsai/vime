@@ -150,6 +150,28 @@ export class HLS implements MediaFileProvider {
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
+              // switch (data.details) {
+              //   // The following network errors cannot be recovered with HLS.startLoad()
+              //   // For more details, see https://github.com/video-dev/hls.js/blob/master/doc/design.md#error-detection-and-handling
+              //   // For "level load" fatal errors, see https://github.com/video-dev/hls.js/issues/1138
+              //   case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
+              //   case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
+              //   case Hls.ErrorDetails.MANIFEST_PARSING_ERROR:
+              //   case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
+              //   case Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT:
+              //     console.error('hlsjs: unrecoverable network fatal error.', { e, data });
+              //     // formattedError = this.createError(error)
+              //     // this.trigger(Events.PLAYBACK_ERROR, formattedError)
+              //     this.destroyHls();
+              //     break;
+              //   default:
+              //     console.warn('hlsjs: trying to recover from network error.', { e, data });
+              //     // error.level = PlayerError.Levels.WARN
+              //     this.hls.startLoad();
+              //     break;
+              // }
+              // break;
+              console.warn('hlsjs: trying to recover from network error.', { e, data });
               this.hls.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
