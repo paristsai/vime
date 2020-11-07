@@ -209,7 +209,9 @@ export class HLS implements MediaFileProvider {
     if (isUndefined(event.detail)) return;
     this.mediaEl = event.detail;
     // Need a small delay incase the media element changes rapidly and Hls.js can't reattach.
-    setTimeout(async () => { await this.setupHls(); }, 50);
+    setTimeout(async () => {
+      await this.setupHls();
+    }, 200);
   }
 
   @Listen('vSrcSetChange')
