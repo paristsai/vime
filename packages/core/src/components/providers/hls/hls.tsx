@@ -1,15 +1,27 @@
 import {
-  h, Method, Component, Prop, State, Event, EventEmitter, Listen,
+  h,
+  Method,
+  Component,
+  Prop,
+  State,
+  Event,
+  EventEmitter,
+  Listen,
 } from '@stencil/core';
-import { MediaFileProvider, MediaPreloadOption, MediaCrossOriginOption } from '../file/MediaFileProvider';
 import {
-  isNullOrUndefined, isString, isUndefined,
-} from '../../../utils/unit';
+  MediaFileProvider,
+  MediaPreloadOption,
+  MediaCrossOriginOption,
+} from '../file/MediaFileProvider';
+import { isNullOrUndefined, isString, isUndefined } from '../../../utils/unit';
 import { loadSDK } from '../../../utils/network';
 import { canPlayHLSNatively } from '../../../utils/support';
 import { hlsRegex, hlsTypeRegex } from '../file/utils';
 import { MediaType } from '../../core/player/MediaType';
-import { createProviderDispatcher, ProviderDispatcher } from '../ProviderDispatcher';
+import {
+  createProviderDispatcher,
+  ProviderDispatcher,
+} from '../ProviderDispatcher';
 
 /**
  * @slot - Pass `<source>` and  `<track>` elements to the underlying HTML5 media player.
@@ -96,8 +108,9 @@ export class HLS implements MediaFileProvider {
   get src(): string | undefined {
     if (isNullOrUndefined(this.videoProvider)) return undefined;
     const sources = this.videoProvider.querySelectorAll('source');
-    const currSource = Array.from(sources)
-      .find((source) => hlsRegex.test(source.src) || hlsTypeRegex.test(source.type));
+    const currSource = Array.from(sources).find(
+      (source) => hlsRegex.test(source.src) || hlsTypeRegex.test(source.type),
+    );
     return currSource?.src;
   }
 
@@ -199,7 +212,9 @@ export class HLS implements MediaFileProvider {
         disablePiP={this.disablePiP}
         disableRemotePlayback={this.disableRemotePlayback}
         mediaTitle={this.mediaTitle}
-        ref={(el: any) => { this.videoProvider = el; }}
+        ref={(el: any) => {
+          this.videoProvider = el;
+        }}
       >
         <slot />
       </vime-video>
