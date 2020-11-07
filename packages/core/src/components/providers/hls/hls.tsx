@@ -118,7 +118,7 @@ export class HLS implements MediaFileProvider {
     if (!isUndefined(this.hls) || canPlayHLSNatively()) return;
 
     try {
-      const url = `https://cdn.jsdelivr.net/npm/hls.js@${this.version}`;
+      const url = `https://cdn.jsdelivr.net/npm/hls.js@${this.version}/dist/hls.min.js`;
       const Hls = await loadSDK(url, 'Hls');
 
       if (!Hls.isSupported()) {
