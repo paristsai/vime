@@ -143,7 +143,7 @@ export class HLS implements MediaFileProvider {
           ];
           this.dispatch('playbackQuality', availableQualities[0]);
           this.dispatch('playbackQualities', availableQualities);
-      });
+        });
       });
 
       this.hls!.on(Hls.Events.ERROR, (e: any, data: any) => {
@@ -184,12 +184,6 @@ export class HLS implements MediaFileProvider {
         }
 
         this.dispatch('errors', [{ e, data }]);
-      });
-
-      this.hls!.on(Hls.Events.MANIFEST_PARSED, () => {
-        this.dispatch('mediaType', MediaType.Video);
-        this.dispatch('currentSrc', this.src);
-        this.dispatch('playbackReady', true);
       });
 
       this.hls!.attachMedia(this.mediaEl);
