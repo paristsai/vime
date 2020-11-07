@@ -3149,6 +3149,12 @@
   dependencies:
     eslint-visitor-keys "^1.1.0"
 
+"@vime/core@https://dipublic.s3-ap-northeast-1.amazonaws.com/vime-core-v4.2.0.tgz":
+  version "4.2.0"
+  resolved "https://dipublic.s3-ap-northeast-1.amazonaws.com/vime-core-v4.2.0.tgz#ec7c7eb63781589aab1c8c1f1f8db93b07e86da9"
+  dependencies:
+    stencil-wormhole "^3.2.1"
+
 "@webassemblyjs/ast@1.9.0":
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/@webassemblyjs/ast/-/ast-1.9.0.tgz#bd850604b4042459a5a41cd7d338cbed695ed964"
