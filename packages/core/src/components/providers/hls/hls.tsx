@@ -131,6 +131,19 @@ export class HLS implements MediaFileProvider {
       this.hls!.on(Hls.Events.MEDIA_ATTACHED, () => {
         this.hasAttached = true;
         this.onSrcChange();
+
+        this.hls!.on(Hls.Events.MANIFEST_PARSED, (e: any, data: any) => {
+          this.dispatch('mediaType', MediaType.Video);
+          this.dispatch('currentSrc', this.src);
+          this.dispatch('playbackReady', true);
+
+          const availableQualities = [
+            '自動',
+            ...data.levels!.map((l: any) => `${l.height}p`),
+          ];
+          this.dispatch('playbackQuality', availableQualities[0]);
+          this.dispatch('playbackQualities', availableQualities);
+      });
       });
 
       this.hls!.on(Hls.Events.ERROR, (e: any, data: any) => {
@@ -195,8 +208,19 @@ export class HLS implements MediaFileProvider {
     return {
       ...adapter,
       getInternalPlayer: async () => this.hls,
-      canPlay: async (type: any) => (isString(type) && hlsRegex.test(type))
-        || canVideoProviderPlay(type),
+      canPlay: async (type: any) => (isString(type) && hlsRegex.test(type)) || canVideoProviderPlay(type),
+      canSetPlaybackQuality: async () => true,
+      setPlaybackQuality: async (quality: string) => {
+        if (this.hls.levels.indexOf(quality) === -1) {
+          this.hls.currentLevel = -1;
+        } else {
+          this.hls.levels.forEach((level: any, levelIndex: any) => {
+            if (`${level.height}p` === quality) {
+              this.hls.currentLevel = levelIndex;
+            }
+          });
+        }
+      },
     };
   }
 
