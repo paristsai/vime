@@ -86,6 +86,13 @@ export class HLS implements MediaFileProvider {
    */
   @Prop() disableRemotePlayback?: boolean;
 
+  /** @internal */
+  @Prop() playbackReady = false;
+
+  /** @internal */
+  // TODO: changeme
+  @Prop() recoverAttemptsRemaining = 16;
+
   /**
    * The title of the current media.
    */
@@ -126,6 +133,7 @@ export class HLS implements MediaFileProvider {
         return;
       }
 
+      this.recoverAttemptsRemaining = this.config.hlsRecoverAttempts || 16;
       this.hls = new Hls(this.config);
 
       this.hls!.on(Hls.Events.MEDIA_ATTACHED, () => {
@@ -148,6 +156,15 @@ export class HLS implements MediaFileProvider {
 
       this.hls!.on(Hls.Events.ERROR, (e: any, data: any) => {
         if (data.fatal) {
+          if (this.recoverAttemptsRemaining <= 0) {
+            console.error('hlsjs: could not recover from error after maximum number of attempts.');
+            this.dispatch('errors', [{ e, data }]);
+            return;
+          }
+
+          this.recoverAttemptsRemaining -= 1;
+          console.log('recoverAttemptsRemaining:', this.recoverAttemptsRemaining);
+
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
               // switch (data.details) {
