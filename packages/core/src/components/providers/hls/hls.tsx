@@ -122,7 +122,9 @@ export class HLS implements MediaFileProvider {
   }
 
   private async setupHls() {
-    if (!isUndefined(this.hls) || canPlayHLSNatively()) return;
+    console.log('newv1231!', 'hlsconfig:', this.config);
+    // if (!isUndefined(this.hls) || canPlayHLSNatively()) return;
+    if (!isUndefined(this.hls)) return;
 
     try {
       const url = `https://cdn.jsdelivr.net/npm/hls.js@${this.version}/dist/hls.min.js`;
@@ -139,19 +141,36 @@ export class HLS implements MediaFileProvider {
       this.hls!.on(Hls.Events.MEDIA_ATTACHED, () => {
         this.hasAttached = true;
         this.onSrcChange();
+      });
 
-        this.hls!.on(Hls.Events.MANIFEST_PARSED, (e: any, data: any) => {
-          this.dispatch('mediaType', MediaType.Video);
-          this.dispatch('currentSrc', this.src);
+      // this.hls!.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
+      //   this.dispatch('audioTracks', this.hls.audioTracks);
+      //   this.dispatch('currentAudioTrack', this.hls.audioTrack);
+      // });
+
+      // this.hls!.on(Hls.Events.AUDIO_TRACK_SWITCHED, () => {
+      //   this.dispatch('currentAudioTrack', this.hls.audioTrack);
+      // });
+
+      this.hls!.on(Hls.Events.MANIFEST_PARSED, (_: any, data: any) => {
+        this.dispatch('mediaType', MediaType.Video);
+        this.dispatch('currentSrc', this.src);
+        // this.dispatch('playbackReady', true);
+
+        const availableQualities = [
+          '自動',
+          ...data.levels!.map((l: any) => `${l.height}p`),
+        ];
+
+        this.dispatch('playbackQualities', availableQualities);
+        this.dispatch('playbackQuality', availableQualities[0]);
+      });
+
+      this.hls!.on(Hls.Events.LEVEL_LOADED, (_: any, data: any) => {
+        if (!this.playbackReady) {
+          this.dispatch('duration', data.details.totalduration);
           this.dispatch('playbackReady', true);
-
-          const availableQualities = [
-            '自動',
-            ...data.levels!.map((l: any) => `${l.height}p`),
-          ];
-          this.dispatch('playbackQuality', availableQualities[0]);
-          this.dispatch('playbackQualities', availableQualities);
-        });
+        }
       });
 
       this.hls!.on(Hls.Events.ERROR, (e: any, data: any) => {
@@ -167,34 +186,37 @@ export class HLS implements MediaFileProvider {
 
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              // switch (data.details) {
-              //   // The following network errors cannot be recovered with HLS.startLoad()
-              //   // For more details, see https://github.com/video-dev/hls.js/blob/master/doc/design.md#error-detection-and-handling
-              //   // For "level load" fatal errors, see https://github.com/video-dev/hls.js/issues/1138
-              //   case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
-              //   case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
-              //   case Hls.ErrorDetails.MANIFEST_PARSING_ERROR:
-              //   case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
-              //   case Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT:
-              //     console.error('hlsjs: unrecoverable network fatal error.', { e, data });
-              //     // formattedError = this.createError(error)
-              //     // this.trigger(Events.PLAYBACK_ERROR, formattedError)
-              //     this.destroyHls();
-              //     break;
-              //   default:
-              //     console.warn('hlsjs: trying to recover from network error.', { e, data });
-              //     // error.level = PlayerError.Levels.WARN
-              //     this.hls.startLoad();
-              //     break;
-              // }
-              // break;
-              console.warn('hlsjs: trying to recover from network error.', { e, data });
-              this.hls.startLoad();
+              switch (data.details) {
+                // The following network errors cannot be recovered with HLS.startLoad()
+                // For more details, see https://github.com/video-dev/hls.js/blob/master/doc/design.md#error-detection-and-handling
+                // For "level load" fatal errors, see https://github.com/video-dev/hls.js/issues/1138
+                case Hls.ErrorDetails.MANIFEST_LOAD_ERROR:
+                case Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT:
+                case Hls.ErrorDetails.MANIFEST_PARSING_ERROR:
+                case Hls.ErrorDetails.LEVEL_LOAD_ERROR:
+                case Hls.ErrorDetails.LEVEL_LOAD_TIMEOUT:
+                  console.error('hlsjs: unrecoverable network fatal error.', { e, data });
+                  // formattedError = this.createError(error)
+                  // this.trigger(Events.PLAYBACK_ERROR, formattedError)
+                  this.dispatch('errors', [{ e, data }]);
+                  this.destroyHls();
+                  break;
+                default:
+                  console.warn('hlsjs: trying to recover from network error.', { e, data });
+                  // error.level = PlayerError.Levels.WARN
+                  this.hls.startLoad();
+                  break;
+              }
               break;
+              // console.warn('hlsjs: trying to recover from network error.', { e, data });
+              // this.hls.startLoad();
+              // break;
             case Hls.ErrorTypes.MEDIA_ERROR:
+              console.warn('hlsjs: trying to recover from media error.', { e, data });
               this.hls.recoverMediaError();
               break;
             default:
+              console.error('hlsjs: could not recover from error.', { e, data });
               this.destroyHls();
               break;
           }
@@ -210,6 +232,7 @@ export class HLS implements MediaFileProvider {
   }
 
   private destroyHls() {
+    this.hls?.stopLoad();
     this.hls?.destroy();
     this.hasAttached = false;
   }
@@ -222,7 +245,7 @@ export class HLS implements MediaFileProvider {
     // Need a small delay incase the media element changes rapidly and Hls.js can't reattach.
     setTimeout(async () => {
       await this.setupHls();
-    }, 200);
+    }, this.config.setupHlsDelay || 500);
   }
 
   @Listen('vSrcSetChange')
@@ -243,9 +266,17 @@ export class HLS implements MediaFileProvider {
     return {
       ...adapter,
       getInternalPlayer: async () => this.hls,
-      canPlay: async (type: any) => (isString(type) && hlsRegex.test(type)) || canVideoProviderPlay(type),
-      canSetPlaybackQuality: async () => true,
+      canPlay: async (type: any) => {
+        const isHls = (isString(type) && hlsRegex.test(type))
+          || (canVideoProviderPlay(type) ?? false);
+        // return !!(Hls.isSupported() && isHls);
+        return isHls;
+      },
+      canSetPlaybackQuality: async () => this.hls?.levels?.length > 0,
       setPlaybackQuality: async (quality: string) => {
+        if (isUndefined(this.hls)) {
+          return;
+        }
         if (this.hls.levels.indexOf(quality) === -1) {
           this.hls.currentLevel = -1;
         } else {
@@ -262,7 +293,8 @@ export class HLS implements MediaFileProvider {
   render() {
     return (
       <vime-video
-        willAttach={!canPlayHLSNatively()}
+        // willAttach={!canPlayHLSNatively()}
+        willAttach
         crossOrigin={this.crossOrigin}
         preload={this.preload}
         poster={this.poster}
