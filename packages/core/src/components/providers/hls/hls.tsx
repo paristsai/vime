@@ -15,7 +15,7 @@ import {
 } from '../file/MediaFileProvider';
 import { isNullOrUndefined, isString, isUndefined } from '../../../utils/unit';
 import { loadSDK } from '../../../utils/network';
-import { canPlayHLSNatively } from '../../../utils/support';
+// import { canPlayHLSNatively } from '../../../utils/support';
 import { hlsRegex, hlsTypeRegex } from '../file/utils';
 import { MediaType } from '../../core/player/MediaType';
 import {
@@ -122,7 +122,7 @@ export class HLS implements MediaFileProvider {
   }
 
   private async setupHls() {
-    console.log('newv1231!', 'hlsconfig:', this.config);
+    // console.log('newv1231!', 'hlsconfig:', this.config);
     // if (!isUndefined(this.hls) || canPlayHLSNatively()) return;
     if (!isUndefined(this.hls)) return;
 
