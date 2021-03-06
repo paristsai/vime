@@ -277,7 +277,7 @@ export class HLS implements MediaFileProvider {
         if (isUndefined(this.hls)) {
           return;
         }
-        if (this.hls.levels.indexOf(quality) === -1) {
+        if (this.hls.levels.map((level: any) => `${level.height}p`).indexOf(quality) === -1) {
           this.hls.currentLevel = -1;
         } else {
           this.hls.levels.forEach((level: any, levelIndex: any) => {
